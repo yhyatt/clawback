@@ -66,11 +66,23 @@ def format_confirmation(cmd: ParsedCommand, trip: Trip | None = None) -> str:
                 f"{person} {templates.format_currency(amount, cmd.currency)}"
                 for person, amount in cmd.custom_splits.items()
             )
+            custom_total = sum(cmd.custom_splits.values())
+            if custom_total != cmd.amount:
+                diff = cmd.amount - custom_total
+                diff_display = templates.format_currency(abs(diff), cmd.currency)
+                warn = (
+                    f"⚠️ splits sum to "
+                    f"{templates.format_currency(custom_total, cmd.currency)}, "
+                    f"{'under' if diff > 0 else 'over'} by {diff_display}. "
+                )
+            else:
+                warn = ""
             return templates.CONFIRM_ADD_EXPENSE_CUSTOM.format(
                 description=cmd.description,
                 amount_display=amount_display,
                 paid_by=cmd.paid_by,
                 splits_summary=splits_summary,
+                warn=warn,
             )
 
         elif cmd.split_type == SplitType.ONLY:

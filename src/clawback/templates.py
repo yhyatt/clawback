@@ -65,7 +65,7 @@ CONFIRM_ADD_EXPENSE_EQUAL_UNKNOWN_PARTICIPANTS = (
 
 CONFIRM_ADD_EXPENSE_CUSTOM = (
     "💬 Got it: *{description}* {amount_display} paid by {paid_by}, "
-    "custom split → {splits_summary}. Add this? (yes/no)"
+    "custom split → {splits_summary}. {warn}Add this? (yes/no)"
 )
 
 CONFIRM_SETTLE = "💬 Settle: {from_person} → {to_person}: {amount_display}. Mark as paid? (yes/no)"

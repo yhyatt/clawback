@@ -53,8 +53,10 @@ def parse_amount_currency(text: str) -> tuple[Decimal, str] | None:
     """
     Parse an amount with currency from text.
 
-    Handles: ₪100, 100₪, $50, 50USD, €30, 30 EUR, etc.
+    Handles: ₪100, 100₪, $50, 50USD, €30, 30 EUR, 1,000₪, 1 000₪ etc.
     """
+    # Normalise space-separated thousands: "1 000" → "1000", "1 500.50" → "1500.50"
+    text = re.sub(r"(\d)\s+(\d{3})\b", r"\1\2", text)
     # Pattern: symbol + amount or amount + symbol/code
     patterns = [
         # Symbol before amount: ₪100, $50.50, €30
@@ -108,7 +110,14 @@ def parse_names_list(text: str) -> list[str]:
     text = re.sub(r"\s*,\s*", ",", text)
 
     names = [n.strip() for n in text.split(",") if n.strip()]
-    return [n.capitalize() for n in names]
+    seen: set[str] = set()
+    result = []
+    for n in names:
+        cap = n.capitalize()
+        if cap not in seen:
+            seen.add(cap)
+            result.append(cap)
+    return result
 
 
 def parse_custom_splits(text: str) -> dict[str, Decimal] | None:
@@ -235,9 +244,9 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
 
     # Pattern 1: add <desc> <amount> paid by <person> [split options]
     add_match = re.match(
-        r"^add\s+(.+?)\s+([\d₪€$£¥,.\s]+[a-zA-Z₪€$£¥]*)\s+paid\s+(?:by\s+)?([a-zA-Z]+)\s*(.*)$",
+        r"^add\s+(.+?)\s+([\d₪€$£¥,.\s]+?[a-zA-Z₪€$£¥]*)\s+paid\s+(?:by\s+)?(\w+)\s*(.*)$",
         text,
-        re.IGNORECASE,
+        re.IGNORECASE | re.UNICODE,
     )
 
     if add_match:
@@ -245,6 +254,16 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
         amount_text = add_match.group(2).strip()
         paid_by = add_match.group(3).capitalize()
         split_text = add_match.group(4).strip()
+
+        # Guard: "paid by" with nothing meaningful after it
+        _reserved = {"by", "paid", "split", "between", "custom", "only", "equally", "equal"}
+        if paid_by.lower() in _reserved:
+            return ParseError(
+                raw_text=original_text,
+                message="Missing payer name — who paid?",
+                suggestions=["Use format: kai add <item> <amount> paid by <name>"],
+                error_type="missing_payer",
+            )
 
         parsed_amount = parse_amount_currency(amount_text)
         if not parsed_amount:
@@ -299,8 +318,12 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
                         split_among = candidates
                 # else: bare "split equally" → split_among stays None, use trip default
 
-            # Check for just "between <people>" or bare names
-            elif re.match(r"^(?:between\s+)?([a-zA-Z,&\s]+)$", split_text, re.IGNORECASE):
+            # Check for "between <people>" or comma-separated bare names
+            # Require explicit "between" OR multiple names (comma/&) to avoid
+            # treating a payer surname as a participant
+            elif re.match(r"^between\s+", split_text, re.IGNORECASE) or re.search(
+                r"[,&]", split_text
+            ):
                 names_match = re.match(r"^(?:between\s+)?(.+)$", split_text, re.IGNORECASE)
                 if names_match:
                     split_among = parse_names_list(names_match.group(1))

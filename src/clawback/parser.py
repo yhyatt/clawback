@@ -63,6 +63,8 @@ def parse_amount_currency(text: str) -> tuple[Decimal, str] | None:
         r"([\d,]+(?:\.\d{1,2})?)\s*([₪€$£¥])",
         # Amount + code: 100 ILS, 50USD, 30 EUR
         r"([\d,]+(?:\.\d{1,2})?)\s*([a-zA-Z]{3})",
+        # Amount + word: 30 dollars, 4000 shekels, 45 euros
+        r"([\d,]+(?:\.\d{1,2})?)\s+(dollars?|shekels?|euros?|pounds?|yen|nis)",
     ]
 
     for pattern in patterns:
@@ -188,9 +190,9 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
 
     # === TRIP ===
     trip_match = re.match(
-        r"^trip\s+([a-zA-Z0-9_\- ]+?)(?:\s+base\s+([a-zA-Z₪€$£¥]{1,3}))?\s*$",
+        r"^trip\s+([\w\- ]+?)(?:\s+base\s+([a-zA-Z₪€$£¥]{1,3}))?\s*$",
         text,
-        re.IGNORECASE,
+        re.IGNORECASE | re.UNICODE,
     )
     if trip_match:
         trip_name = trip_match.group(1).strip()

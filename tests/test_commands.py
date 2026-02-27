@@ -313,8 +313,8 @@ class TestCommandHandler:
     def test_parse_error_response(self, handler: CommandHandler) -> None:
         """Test error response for unparseable command."""
         response = handler.handle_message("chat1", "gibberish asdfgh")
-        assert "Didn't understand" in response
-        assert "Try:" in response
+        assert "didn't understand" in response.lower()
+        assert "kai add" in response
 
     def test_all_settled_message(self, handler: CommandHandler) -> None:
         """Test 'all settled' message when no debts."""

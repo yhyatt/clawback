@@ -53,6 +53,16 @@ CONFIRM_ADD_EXPENSE_ONLY = (
     "only {participants} → each {per_person}. Add this? (yes/no)"
 )
 
+CONFIRM_ADD_EXPENSE_ONLY_SELF = (
+    "💬 Got it: *{description}* {amount_display} paid by {paid_by}, "
+    "covers {paid_by} only → no balance change. Add this? (yes/no)"
+)
+
+CONFIRM_ADD_EXPENSE_EQUAL_UNKNOWN_PARTICIPANTS = (
+    "💬 Got it: *{description}* {amount_display} paid by {paid_by}, "
+    "split equally — but who's splitting? Reply with names, e.g. *between Dan, Sara, Avi*"
+)
+
 CONFIRM_ADD_EXPENSE_CUSTOM = (
     "💬 Got it: *{description}* {amount_display} paid by {paid_by}, "
     "custom split → {splits_summary}. Add this? (yes/no)"

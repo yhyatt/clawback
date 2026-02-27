@@ -77,6 +77,13 @@ def format_confirmation(cmd: ParsedCommand, trip: Trip | None = None) -> str:
             assert cmd.split_among is not None
             participants_str = " & ".join(cmd.split_among)
             n = len(cmd.split_among)
+            # Single participant who is also the payer → zero net debt
+            if n == 1 and cmd.split_among[0].lower() == cmd.paid_by.lower():
+                return templates.CONFIRM_ADD_EXPENSE_ONLY_SELF.format(
+                    description=cmd.description,
+                    amount_display=amount_display,
+                    paid_by=cmd.paid_by,
+                )
             per_person = templates.format_currency(
                 (cmd.amount / n).quantize(Decimal("0.01")),
                 cmd.currency,
@@ -97,7 +104,12 @@ def format_confirmation(cmd: ParsedCommand, trip: Trip | None = None) -> str:
             elif trip and trip.participants:
                 participants_list = trip.participants
             else:
-                participants_list = [cmd.paid_by]  # Will need more participants
+                # No participants known — ask rather than silently assume
+                return templates.CONFIRM_ADD_EXPENSE_EQUAL_UNKNOWN_PARTICIPANTS.format(
+                    description=cmd.description,
+                    amount_display=amount_display,
+                    paid_by=cmd.paid_by,
+                )
 
             splits = ledger.compute_equal_splits(cmd.amount, cmd.currency, participants_list)
             splits_summary = ", ".join(

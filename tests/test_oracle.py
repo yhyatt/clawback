@@ -73,48 +73,74 @@ def normalize_participants(participants: list[str] | None) -> list[str] | None:
     return sorted([p.capitalize() for p in participants])
 
 
-def validate_with_haiku(input_text: str, confirmation: str) -> tuple[bool, str]:
+def validate_with_haiku(input_text: str, actual_confirmation: str) -> tuple[bool, str]:
     """
-    Validate confirmation message with Claude Haiku.
+    Validate the pipeline's ACTUAL confirmation output using a small LLM.
 
-    Returns:
-        Tuple of (is_valid, reason)
+    Two modes (checked in order):
+      1. CLAWBACK_OPENCLAW_URL + CLAWBACK_OPENCLAW_TOKEN  -> route via OpenClaw gateway
+      2. ANTHROPIC_API_KEY                                -> direct Anthropic API
+
+    Returns (True, reason) if valid, (False, reason) if not.
+    Raises RuntimeError if no credentials configured.
     """
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        return True, "Skipped - no API key"
+    openclaw_url = os.environ.get("CLAWBACK_OPENCLAW_URL")
+    openclaw_token = os.environ.get("CLAWBACK_OPENCLAW_TOKEN")
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
 
-    try:
+    prompt = f"""You are verifying that an expense-splitting assistant correctly understood a user request.
+
+User input: {input_text}
+
+Assistant confirmation shown to user:
+{actual_confirmation}
+
+Does the confirmation accurately reflect what the user requested?
+Check: correct amount, correct payer, correct split participants, correct per-person amounts (verify arithmetic).
+
+Reply ONLY with:
+  YES  — if everything is accurate
+  NO: <reason>  — if anything is wrong"""
+
+    if openclaw_url and openclaw_token:
+        # Route via OpenClaw gateway (OpenAI-compatible endpoint)
+        import urllib.request, json as _json
+        req = urllib.request.Request(
+            f"{openclaw_url}/v1/chat/completions",
+            data=_json.dumps({
+                "model": "openclaw:main",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 120,
+            }).encode(),
+            headers={
+                "Authorization": f"Bearer {openclaw_token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = _json.loads(resp.read())
+        result = data["choices"][0]["message"]["content"].strip()
+
+    elif anthropic_key:
         import anthropic
-
-        client = anthropic.Anthropic(api_key=api_key)
-
-        prompt = f"""Is this expense confirmation accurate for the given input?
-
-Input: {input_text}
-Confirmation: {confirmation}
-
-Check:
-1. Does the confirmation accurately reflect the expense details (amount, payer, split)?
-2. Are the calculated splits correct?
-3. Does it include a yes/no prompt?
-
-Reply with ONLY "YES" if accurate, or "NO: <brief reason>" if not."""
-
-        response = client.messages.create(
+        client = anthropic.Anthropic(api_key=anthropic_key)
+        resp = client.messages.create(
             model="claude-3-haiku-20240307",
-            max_tokens=100,
+            max_tokens=120,
             messages=[{"role": "user", "content": prompt}],
         )
+        result = resp.content[0].text.strip()
 
-        result = response.content[0].text.strip()
-        if result.upper().startswith("YES"):
-            return True, "Haiku approved"
-        else:
-            return False, result
+    else:
+        raise RuntimeError(
+            "No LLM credentials for Haiku validation. Set CLAWBACK_OPENCLAW_URL + "
+            "CLAWBACK_OPENCLAW_TOKEN or ANTHROPIC_API_KEY"
+        )
 
-    except Exception as e:
-        return True, f"Haiku validation skipped: {e}"
+    if result.upper().startswith("YES"):
+        return True, result
+    return False, result
 
 
 @pytest.mark.oracle
@@ -429,9 +455,15 @@ class TestOracleHaiku:
 
         confirmation = format_confirmation(result, trip)
 
+        # Validate ACTUAL pipeline output (not the pre-written GT expectation)
         is_valid, reason = validate_with_haiku(input_text, confirmation)
 
-        assert is_valid, f"Case {case_id}: Haiku validation failed - {reason}"
+        assert is_valid, (
+            f"Case {case_id}: LLM validation failed\n"
+            f"  Input: {input_text}\n"
+            f"  Actual confirmation: {confirmation}\n"
+            f"  Verdict: {reason}"
+        )
 
 
 @pytest.mark.oracle

@@ -283,17 +283,21 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
                         error_type="invalid_custom_split",
                     )
 
-            # Check for "split equally between <people>"
-            elif re.match(
-                r"^(?:split\s+)?equal(?:ly)?\s+(?:between\s+)?(.+)$", split_text, re.IGNORECASE
-            ):
+            # Check for "split equally [between <people>]" or bare "equally"
+            elif re.match(r"^(?:split\s+)?equal(?:ly)?", split_text, re.IGNORECASE):
+                # Extract optional participant list after "equally [between]"
                 between_match = re.match(
                     r"^(?:split\s+)?equal(?:ly)?\s+(?:between\s+)?(.+)$",
                     split_text,
                     re.IGNORECASE,
                 )
                 if between_match:
-                    split_among = parse_names_list(between_match.group(1))
+                    candidates = parse_names_list(between_match.group(1))
+                    # Only treat as names if none look like split keywords
+                    _split_kw = re.compile(r"^(split|equally|equal|between)$", re.IGNORECASE)
+                    if candidates and not any(_split_kw.match(n) for n in candidates):
+                        split_among = candidates
+                # else: bare "split equally" → split_among stays None, use trip default
 
             # Check for just "between <people>" or bare names
             elif re.match(r"^(?:between\s+)?([a-zA-Z,&\s]+)$", split_text, re.IGNORECASE):

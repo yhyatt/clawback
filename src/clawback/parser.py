@@ -250,6 +250,7 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
                 raw_text=original_text,
                 message=f"Could not parse amount from '{amount_text}'",
                 suggestions=["Use format: ₪100, $50, 30EUR"],
+                error_type="invalid_amount",
             )
 
         amount, currency = parsed_amount
@@ -277,6 +278,7 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
                         raw_text=original_text,
                         message=f"Could not parse custom splits from '{custom_text}'",
                         suggestions=["Use format: custom Dan:50, Sara:30, Avi:20"],
+                        error_type="invalid_custom_split",
                     )
 
             # Check for "split equally between <people>"
@@ -309,7 +311,19 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
             custom_splits=custom_splits,
         )
 
-    # No pattern matched
+    # No pattern matched - try to determine specific error type
+    text_lower = text.lower()
+    error_type = "unknown_command"
+
+    # Check for partial add command patterns
+    if text_lower.startswith("add"):
+        if "paid" not in text_lower:
+            error_type = "missing_paid_by"
+        elif not any(c in text for c in "₪€$£¥") and not re.search(r"\d", text):
+            error_type = "missing_amount"
+        else:
+            error_type = "missing_amount"  # Default for malformed add
+
     return ParseError(
         raw_text=original_text,
         message="Could not understand command",
@@ -319,4 +333,5 @@ def parse_command(text: str) -> ParsedCommand | ParseError:
             "kai balances",
             "kai help",
         ],
+        error_type=error_type,
     )

@@ -40,6 +40,7 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0",
     "types-requests>=2.28",
+    "anthropic>=0.18.0",
 ]
 
 [project.scripts]
@@ -93,6 +94,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+markers = [
+    "oracle: Opus GT oracle tests, not run in default CI",
+]
 
 [tool.coverage.run]
 source = ["src/clawback"]

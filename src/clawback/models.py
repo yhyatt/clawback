@@ -168,6 +168,7 @@ class ParseError(BaseModel):
     raw_text: str
     message: str
     suggestions: list[str] = Field(default_factory=list)
+    error_type: str = "generic"  # One of: missing_amount, missing_paid_by, invalid_amount, etc.
 
 
 class PendingConfirmation(BaseModel):

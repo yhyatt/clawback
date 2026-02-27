@@ -1,5 +1,17 @@
 """Shared test fixtures for Clawback tests."""
 
+import pytest
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Add --haiku flag to pytest."""
+    parser.addoption(
+        "--haiku",
+        action="store_true",
+        default=False,
+        help="Enable Haiku validation layer for confirmation messages",
+    )
+
 import tempfile
 from collections.abc import Generator
 from decimal import Decimal

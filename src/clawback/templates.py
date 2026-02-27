@@ -133,6 +133,48 @@ ERROR_SHEETS = (
 )
 
 
+# === FALLBACK TEMPLATES (keyed by error type) ===
+
+FALLBACK_TEMPLATES: dict[str, str] = {
+    "missing_amount": (
+        "❓ I didn't catch the amount. Try:\n"
+        "*kai add dinner ₪150 paid by dan split equally*"
+    ),
+    "missing_paid_by": (
+        "❓ Who paid? Try:\n"
+        "*kai add dinner ₪150 paid by yonatan split equally*"
+    ),
+    "missing_participants": (
+        "❓ Who's splitting? Try:\n"
+        "*kai add dinner ₪150 paid by yonatan split equally between yonatan/dan/sara*"
+    ),
+    "invalid_amount": (
+        "❓ That amount doesn't look right. Try:\n"
+        "*kai add dinner ₪150 paid by dan*\n"
+        "Supported: ₪100, $50, €30, 100 ILS"
+    ),
+    "invalid_custom_split": (
+        "❓ Couldn't parse custom split. Try:\n"
+        "*kai add dinner ₪100 paid by dan custom dan:40, sara:30, avi:30*"
+    ),
+    "unknown_command": (
+        "❓ I didn't understand that. Commands:\n"
+        "• *kai add [item] [amount] paid by [person] split equally*\n"
+        "• *kai balances*\n"
+        "• *kai settle [person] paid [person] [amount]*"
+    ),
+    "generic": (
+        "❓ Couldn't parse that. Try:\n"
+        "*kai add dinner ₪150 paid by dan split equally between dan/sara*"
+    ),
+}
+
+
+def get_fallback_message(error_type: str) -> str:
+    """Get the fallback message for a given error type."""
+    return FALLBACK_TEMPLATES.get(error_type, FALLBACK_TEMPLATES["generic"])
+
+
 # === NOTHING TO DO ===
 
 NOTHING_TO_UNDO = "🤷 Nothing to undo."

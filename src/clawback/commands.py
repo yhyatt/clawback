@@ -7,6 +7,7 @@ Read commands (balances, summary, who, help) execute directly.
 from decimal import Decimal
 
 from . import ledger, templates
+from .audit import log_input
 from .fx import convert
 from .models import (
     CommandType,
@@ -30,6 +31,15 @@ from .state import TripManager
 
 # Commands that require confirmation
 WRITE_COMMANDS = {CommandType.ADD_EXPENSE, CommandType.SETTLE, CommandType.UNDO, CommandType.TRIP}
+
+
+def format_fallback(error: ParseError) -> str:
+    """
+    Format a fallback message for a parse error.
+
+    Uses error-specific templates for better UX.
+    """
+    return templates.get_fallback_message(error.error_type)
 
 
 def format_confirmation(cmd: ParsedCommand, trip: Trip | None = None) -> str:
@@ -201,14 +211,17 @@ class CommandHandler:
         Returns:
             Response message to send back
         """
+        original_text = text
         text = text.strip()
 
         # Check if this is a response to a pending confirmation
         pending = self.trip_manager.get_pending(chat_id)
         if pending:
             if is_confirmation(text):
+                log_input(original_text, chat_id, "ok")
                 return self._execute_pending(chat_id, pending)
             elif is_rejection(text):
+                log_input(original_text, chat_id, "ok")
                 self.trip_manager.clear_pending(chat_id)
                 return "❌ Cancelled."
             # Not a yes/no, treat as new command (clears pending)
@@ -218,12 +231,13 @@ class CommandHandler:
         result = parse_command(text)
 
         if isinstance(result, ParseError):
-            suggestions = "\n".join(f"• `{s}`" for s in result.suggestions)
-            return templates.ERROR_PARSE.format(
-                raw_text=result.raw_text,
-                message=result.message,
-                suggestions=suggestions,
-            )
+            # Log the failed parse
+            log_input(original_text, chat_id, "error", error_msg=result.message)
+            # Return error-specific fallback message
+            return format_fallback(result)
+
+        # Log successful parse
+        log_input(original_text, chat_id, "ok")
 
         # Get active trip for this chat
         trip = self.trip_manager.get_active_trip(chat_id)

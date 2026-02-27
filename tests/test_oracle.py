@@ -58,6 +58,14 @@ ORACLE_CASES = load_oracle_cases()
 CASES_BY_ID = {case["id"]: case for case in ORACLE_CASES}
 
 
+def _save_oracle_cases() -> None:
+    """Persist ORACLE_CASES back to oracle_cases.jsonl (used by --update-gt)."""
+    import json as _json
+    ORACLE_CASES_PATH.write_text(
+        "\n".join(_json.dumps(c) for c in ORACLE_CASES) + "\n"
+    )
+
+
 def compare_decimal(actual: Decimal | str, expected: str) -> bool:
     """Compare decimal values with tolerance."""
     actual_dec = Decimal(str(actual))
@@ -527,6 +535,54 @@ class TestOracleHaiku:
             f"  Input: {case['input']}\n"
             f"  Confirmation: {confirmation}\n"
             f"  Verdict: {reason}"
+        )
+
+
+@pytest.mark.oracle
+class TestOracleConfirmationFormat:
+    """Regression tests: actual formatter output must match GT expected_confirmation.
+
+    GT was generated from the fixed formatter and captured in oracle_cases.jsonl.
+    A failure here means either:
+      (a) a formatter regression — fix the code, or
+      (b) an intentional change — update GT with: pytest --update-gt
+    """
+
+    @pytest.mark.parametrize(
+        "case_id",
+        [c["id"] for c in ORACLE_CASES if c["should_parse"] and c.get("expected_confirmation")],
+    )
+    def test_confirmation_matches_gt(self, case_id: str, request: pytest.FixtureRequest) -> None:
+        """Actual confirmation must exactly match the GT string.
+
+        Run with --update-gt to regenerate GT from current formatter output.
+        """
+        update_gt = request.config.getoption("--update-gt", default=False)
+        case = CASES_BY_ID[case_id]
+        result = parse_command(case["input"])
+        if not isinstance(result, ParsedCommand):
+            pytest.skip(f"Case {case_id} did not parse")
+            return
+
+        trip = Trip(
+            name="Test Trip",
+            base_currency="ILS",
+            participants=["Dan", "Sara", "Avi", "Yonatan", "Louise", "Zoe", "Lenny"],
+        )
+        actual = format_confirmation(result, trip)
+
+        if update_gt:
+            case["expected_confirmation"] = actual
+            _save_oracle_cases()
+            return
+
+        expected = case["expected_confirmation"]
+        assert actual == expected, (
+            f"Case {case_id}: confirmation mismatch\n"
+            f"  Input:    {case['input']}\n"
+            f"  Expected: {expected}\n"
+            f"  Actual:   {actual}\n"
+            f"  Tip: run pytest --update-gt to accept current output as new GT"
         )
 
 

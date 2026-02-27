@@ -13,12 +13,18 @@ from clawback.state import TripManager
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    """Add --haiku flag to pytest."""
+    """Add CLI flags for oracle test suite."""
     parser.addoption(
         "--haiku",
         action="store_true",
         default=False,
-        help="Enable Haiku validation layer for confirmation messages",
+        help="Enable batched LLM validation of confirmation messages",
+    )
+    parser.addoption(
+        "--update-gt",
+        action="store_true",
+        default=False,
+        help="Regenerate expected_confirmation GT in oracle_cases.jsonl from current formatter",
     )
 
 @pytest.fixture

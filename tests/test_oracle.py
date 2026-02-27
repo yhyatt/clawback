@@ -21,7 +21,6 @@ from clawback import ledger
 from clawback.commands import format_confirmation, format_fallback
 from clawback.models import CommandType, ParsedCommand, ParseError, SplitType, Trip
 from clawback.parser import parse_command
-from clawback.templates import get_fallback_message
 
 # Path to oracle cases
 ORACLE_CASES_PATH = Path(__file__).parent / "fixtures" / "oracle_cases.jsonl"
@@ -73,7 +72,11 @@ def normalize_participants(participants: list[str] | None) -> list[str] | None:
     return sorted([p.capitalize() for p in participants])
 
 
-def validate_with_haiku(input_text: str, actual_confirmation: str) -> tuple[bool, str]:
+def validate_with_haiku(
+    input_text: str,
+    actual_confirmation: str,
+    trip_participants: list[str] | None = None,
+) -> tuple[bool, str]:
     """
     Validate the pipeline's ACTUAL confirmation output using a small LLM.
 
@@ -88,7 +91,15 @@ def validate_with_haiku(input_text: str, actual_confirmation: str) -> tuple[bool
     openclaw_token = os.environ.get("CLAWBACK_OPENCLAW_TOKEN")
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
 
-    prompt = f"""You are verifying that an expense-splitting assistant correctly understood a user request.
+    participants_context = (
+        f"\nThe trip has a pre-configured default group: {', '.join(trip_participants)}."
+        " When no participants are specified in the input, the assistant splits equally among this group."
+        " Treat this as valid — do NOT flag 'participants not specified' as an error."
+        if trip_participants
+        else ""
+    )
+
+    prompt = f"""You are verifying that an expense-splitting assistant correctly understood a user request.{participants_context}
 
 User input: {input_text}
 
@@ -97,14 +108,16 @@ Assistant confirmation shown to user:
 
 Does the confirmation accurately reflect what the user requested?
 Check: correct amount, correct payer, correct split participants, correct per-person amounts (verify arithmetic).
+If the confirmation asks a clarifying question (e.g. "who's splitting?"), that is correct when no participants were specified.
 
 Reply ONLY with:
   YES  — if everything is accurate
-  NO: <reason>  — if anything is wrong"""
+  NO: <reason>  — if anything is wrong (do not say NO just because participants weren't named in the input if a default group is configured)"""
 
     if openclaw_url and openclaw_token:
         # Route via OpenClaw gateway (OpenAI-compatible endpoint)
-        import urllib.request, json as _json
+        import json as _json
+        import urllib.request
         req = urllib.request.Request(
             f"{openclaw_url}/v1/chat/completions",
             data=_json.dumps({
@@ -456,7 +469,7 @@ class TestOracleHaiku:
         confirmation = format_confirmation(result, trip)
 
         # Validate ACTUAL pipeline output (not the pre-written GT expectation)
-        is_valid, reason = validate_with_haiku(input_text, confirmation)
+        is_valid, reason = validate_with_haiku(input_text, confirmation, trip.participants)
 
         assert is_valid, (
             f"Case {case_id}: LLM validation failed\n"
@@ -487,15 +500,15 @@ class TestOracleSummary:
             by_language[lang] = by_language.get(lang, 0) + 1
             by_intent[intent] = by_intent.get(intent, 0) + 1
 
-        print(f"\n📊 Oracle Test Suite Statistics")
+        print("\n📊 Oracle Test Suite Statistics")
         print(f"{'='*40}")
         print(f"Total cases: {total}")
         print(f"Should parse: {should_parse}")
         print(f"Should fail: {should_fail}")
-        print(f"\nBy language:")
+        print("\nBy language:")
         for lang, count in sorted(by_language.items()):
             print(f"  {lang}: {count}")
-        print(f"\nBy intent:")
+        print("\nBy intent:")
         for intent, count in sorted(by_intent.items()):
             print(f"  {intent}: {count}")
 
@@ -516,7 +529,7 @@ class TestOracleSummary:
                 else:
                     parse_failures += 1
 
-        print(f"\n📈 Validation Results:")
+        print("\n📈 Validation Results:")
         print(f"  Correct: {parse_successes}/{total} ({100*parse_successes/total:.1f}%)")
         print(f"  Incorrect: {parse_failures}/{total}")
 

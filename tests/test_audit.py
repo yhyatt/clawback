@@ -1,7 +1,5 @@
 """Tests for Clawback audit module - raw input logging."""
 
-import json
-import tempfile
 from pathlib import Path
 
 import pytest

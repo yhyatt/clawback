@@ -482,13 +482,28 @@ _HAIKU_TRIP = Trip(
 )
 
 # Pre-compute all (case_id → confirmation) for batch runs
+# add_expense: use default trip with 7 participants
+# add_expense_no_trip: use trip=None (tests the clarification prompt path)
 _HAIKU_CASES: list[dict] = []
 for _c in ORACLE_CASES:
-    if _c["should_parse"] and _c.get("intent") == "add_expense":
+    if not _c["should_parse"]:
+        continue
+    if _c.get("intent") == "add_expense":
         _r = parse_command(_c["input"])
         if isinstance(_r, ParsedCommand):
             _conf = format_confirmation(_r, _HAIKU_TRIP)
-            _HAIKU_CASES.append({"id": _c["id"], "input": _c["input"], "confirmation": _conf})
+            _HAIKU_CASES.append({
+                "id": _c["id"], "input": _c["input"], "confirmation": _conf,
+                "trip_participants": _HAIKU_TRIP.participants,
+            })
+    elif _c.get("intent") == "add_expense_no_trip":
+        _r = parse_command(_c["input"])
+        if isinstance(_r, ParsedCommand):
+            _conf = format_confirmation(_r, None)
+            _HAIKU_CASES.append({
+                "id": _c["id"], "input": _c["input"], "confirmation": _conf,
+                "trip_participants": None,  # no group context — Haiku judges cold
+            })
 
 # Run batch validation once at module level (cached); keyed by case_id
 _HAIKU_RESULTS: dict[str, tuple[bool, str]] = {}
@@ -498,10 +513,15 @@ def _ensure_haiku_results() -> None:
     """Run batched LLM validation for all cases (once per test session)."""
     if _HAIKU_RESULTS:
         return
-    for i in range(0, len(_HAIKU_CASES), _LLM_BATCH_SIZE):
-        batch = _HAIKU_CASES[i : i + _LLM_BATCH_SIZE]
-        results = validate_batch(batch, _HAIKU_TRIP.participants)
-        _HAIKU_RESULTS.update(results)
+    # Split into groups by participant context before batching
+    trip_cases = [c for c in _HAIKU_CASES if c.get("trip_participants")]
+    no_trip_cases = [c for c in _HAIKU_CASES if not c.get("trip_participants")]
+
+    for group, participants in [(trip_cases, _HAIKU_TRIP.participants), (no_trip_cases, None)]:
+        for i in range(0, len(group), _LLM_BATCH_SIZE):
+            batch = group[i : i + _LLM_BATCH_SIZE]
+            results = validate_batch(batch, participants)
+            _HAIKU_RESULTS.update(results)
 
 
 @pytest.mark.oracle
@@ -550,7 +570,8 @@ class TestOracleConfirmationFormat:
 
     @pytest.mark.parametrize(
         "case_id",
-        [c["id"] for c in ORACLE_CASES if c["should_parse"] and c.get("expected_confirmation")],
+        [c["id"] for c in ORACLE_CASES
+         if c["should_parse"] and c.get("expected_confirmation")],
     )
     def test_confirmation_matches_gt(self, case_id: str, request: pytest.FixtureRequest) -> None:
         """Actual confirmation must exactly match the GT string.
@@ -564,11 +585,15 @@ class TestOracleConfirmationFormat:
             pytest.skip(f"Case {case_id} did not parse")
             return
 
-        trip = Trip(
-            name="Test Trip",
-            base_currency="ILS",
-            participants=["Dan", "Sara", "Avi", "Yonatan", "Louise", "Zoe", "Lenny"],
-        )
+        # no_trip intent cases use trip=None to test clarification prompt
+        if case.get("intent") == "add_expense_no_trip":
+            trip = None
+        else:
+            trip = Trip(
+                name="Test Trip",
+                base_currency="ILS",
+                participants=["Dan", "Sara", "Avi", "Yonatan", "Louise", "Zoe", "Lenny"],
+            )
         actual = format_confirmation(result, trip)
 
         if update_gt:

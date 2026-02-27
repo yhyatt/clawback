@@ -316,6 +316,67 @@ class TestCommandHandler:
         assert "didn't understand" in response.lower()
         assert "kai add" in response
 
+    def test_unknown_participants_no_trip(self) -> None:
+        """Without an active trip, equal split with no participants asks who's splitting."""
+        from decimal import Decimal
+
+        from clawback.commands import format_confirmation
+        from clawback.models import CommandType, ParsedCommand, SplitType
+        cmd = ParsedCommand(
+            command_type=CommandType.ADD_EXPENSE,
+            raw_text="kai add dinner ₪100 paid by dan",
+            description="dinner",
+            amount=Decimal("100"),
+            currency="ILS",
+            paid_by="Dan",
+            split_type=SplitType.EQUAL,
+            split_among=None,
+        )
+        result = format_confirmation(cmd, trip=None)
+        assert "who's splitting" in result
+        assert "between" in result
+
+    def test_unknown_participants_empty_trip(self) -> None:
+        """Trip with no participants also triggers the clarification prompt."""
+        from decimal import Decimal
+
+        from clawback.commands import format_confirmation
+        from clawback.models import CommandType, ParsedCommand, SplitType, Trip
+        cmd = ParsedCommand(
+            command_type=CommandType.ADD_EXPENSE,
+            raw_text="kai add lunch ₪50 paid by sara",
+            description="lunch",
+            amount=Decimal("50"),
+            currency="ILS",
+            paid_by="Sara",
+            split_type=SplitType.EQUAL,
+            split_among=None,
+        )
+        empty_trip = Trip(name="Test", base_currency="ILS", participants=[])
+        result = format_confirmation(cmd, trip=empty_trip)
+        assert "who's splitting" in result
+
+    def test_known_participants_trip_used(self) -> None:
+        """When trip has participants and none explicitly given, trip roster is used."""
+        from decimal import Decimal
+
+        from clawback.commands import format_confirmation
+        from clawback.models import CommandType, ParsedCommand, SplitType, Trip
+        cmd = ParsedCommand(
+            command_type=CommandType.ADD_EXPENSE,
+            raw_text="kai add drinks ₪90 paid by avi",
+            description="drinks",
+            amount=Decimal("90"),
+            currency="ILS",
+            paid_by="Avi",
+            split_type=SplitType.EQUAL,
+            split_among=None,
+        )
+        trip = Trip(name="Test", base_currency="ILS", participants=["Avi", "Dan", "Sara"])
+        result = format_confirmation(cmd, trip=trip)
+        assert "who's splitting" not in result
+        assert "₪30.00" in result
+
     def test_all_settled_message(self, handler: CommandHandler) -> None:
         """Test 'all settled' message when no debts."""
         # Setup: create trip with balanced expense

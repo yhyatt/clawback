@@ -7,8 +7,8 @@
 **Group expense splitting that understands how you actually talk.**
 
 [![CI](https://github.com/yhyatt/clawback/actions/workflows/ci.yml/badge.svg)](https://github.com/yhyatt/clawback/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://github.com/yhyatt/clawback/actions)
-[![Python](https://img.shields.io/pypi/pyversions/clawback)](https://pypi.org/project/clawback/)
+[![codecov](https://codecov.io/gh/yhyatt/clawback/branch/main/graph/badge.svg)](https://codecov.io/gh/yhyatt/clawback)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://github.com/yhyatt/clawback)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blue)](https://clawhub.com/skills/clawback-expense)
 [![Contributing](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)

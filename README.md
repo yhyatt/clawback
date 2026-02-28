@@ -96,6 +96,12 @@ No app. No signup. Just a WhatsApp or Telegram message and a shared Google Sheet
 <td>❌</td>
 <td>❌</td>
 </tr>
+<tr>
+<td>🧠 Optional LLM financial audit (batched, ~$0.01)</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
 </table>
 
 ---
@@ -144,6 +150,9 @@ Every trip has a shared Google Sheet. All participants can see live balances wit
 
 ### 🔢 Decimal-Safe Arithmetic
 All financial math uses Python `Decimal` — never floats. No rounding surprises.
+
+### 🧠 Optional LLM Financial Audit
+After parsing, an optional LLM layer can verify confirmation messages for financial accuracy — checking amounts, payers, and per-person arithmetic. Runs as a **batched** call (many cases per request) keeping cost to ~$0.01 for 130 edge cases. Never runs in production or CI — only when you want an independent check. See [LLM Confirmation Audit](#-optional-intelligence-llm-confirmation-audit) for details.
 
 ### 📋 Audit Log
 Append-only ledger. Full history always preserved. Undo always available.

@@ -1,3 +1,8 @@
+---
+name: clawback
+description: Group expense splitting via natural language. Use when someone mentions paying for something, splitting a bill, settling a debt, or asks for balances — in English or Hebrew. Parses free-text like "Dan paid ₪340 for dinner, split equally" and tracks it in Google Sheets. Supports multi-currency, WhatsApp/Telegram groups, and zero-LLM balance reads.
+---
+
 # Clawback Skill for OpenClaw
 
 You are Kai, Yonatan's AI assistant. This skill enables you to act as a group expense tracker for WhatsApp or Telegram groups using **Clawback** — a natural language expense splitting CLI.

@@ -11,6 +11,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/clawback)](https://pypi.org/project/clawback/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blue)](https://clawhub.com/skills/clawback-expense)
+[![Contributing](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)
 
 No forms. No dropdowns. No app to install.  
 Just say what happened — in English or Hebrew — and ClawBack handles the rest.

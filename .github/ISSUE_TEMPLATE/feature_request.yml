@@ -1,0 +1,49 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? We'd love to hear it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or limitation you're hitting.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like to see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example input/output
+      description: If it's a parser feature, show example natural language input and expected parsed result.
+      placeholder: |
+        Input: "Dan paid ₪340, Yonatan owes 30%, rest split equally"
+        Expected: Yonatan → ₪102, others → split ₪238 equally
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Parser (new language / syntax)
+        - Currency support
+        - Google Sheets integration
+        - CLI / commands
+        - OpenClaw skill
+        - Other
+    validations:
+      required: true

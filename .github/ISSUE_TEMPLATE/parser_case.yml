@@ -1,0 +1,49 @@
+name: Parser Case
+description: An expense string that parses incorrectly or isn't supported yet
+labels: ["parser"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Found a natural language pattern ClawBack doesn't handle? Report it here.
+
+  - type: textarea
+    id: input
+    attributes:
+      label: Input string
+      description: The exact message that doesn't parse correctly.
+      placeholder: '"Yonatan שילם €200 for the hotel, split 3 ways"'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected parse result
+      description: What should this produce?
+      placeholder: |
+        payer: Yonatan
+        amount: €200
+        split: equal 3 ways
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What does ClawBack do instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - English
+        - Hebrew
+        - Mixed (English + Hebrew)
+        - Other
+    validations:
+      required: true

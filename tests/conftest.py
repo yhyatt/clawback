@@ -27,6 +27,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Regenerate expected_confirmation GT in oracle_cases.jsonl from current formatter",
     )
 
+
 @pytest.fixture
 def sample_trip() -> Trip:
     """Create a sample trip for testing."""

@@ -61,9 +61,8 @@ CASES_BY_ID = {case["id"]: case for case in ORACLE_CASES}
 def _save_oracle_cases() -> None:
     """Persist ORACLE_CASES back to oracle_cases.jsonl (used by --update-gt)."""
     import json as _json
-    ORACLE_CASES_PATH.write_text(
-        "\n".join(_json.dumps(c) for c in ORACLE_CASES) + "\n"
-    )
+
+    ORACLE_CASES_PATH.write_text("\n".join(_json.dumps(c) for c in ORACLE_CASES) + "\n")
 
 
 def compare_decimal(actual: Decimal | str, expected: str) -> bool:
@@ -95,11 +94,13 @@ def _llm_call(prompt: str, max_tokens: int = 1024) -> str:
     if openclaw_url and openclaw_token:
         req = urllib.request.Request(
             f"{openclaw_url}/v1/chat/completions",
-            data=_json.dumps({
-                "model": "openclaw:main",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens,
-            }).encode(),
+            data=_json.dumps(
+                {
+                    "model": "openclaw:main",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_tokens,
+                }
+            ).encode(),
             headers={
                 "Authorization": f"Bearer {openclaw_token}",
                 "Content-Type": "application/json",
@@ -112,6 +113,7 @@ def _llm_call(prompt: str, max_tokens: int = 1024) -> str:
 
     elif anthropic_key:
         import anthropic
+
         client = anthropic.Anthropic(api_key=anthropic_key)
         resp = client.messages.create(
             model="claude-3-haiku-20240307",
@@ -147,9 +149,9 @@ def validate_batch(
     )
 
     cases_block = "\n\n".join(
-        f'''[{c["id"]}]
+        f"""[{c["id"]}]
 Input: {c["input"]}
-Confirmation: {c["confirmation"]}'''.strip()
+Confirmation: {c["confirmation"]}""".strip()
         for c in cases
     )
 
@@ -172,7 +174,8 @@ Use verdict "YES" if accurate, "NO" if anything is wrong. Be concise in reason."
 
     # Extract JSON array from response (strip any surrounding text)
     import re
-    match = re.search(r'\[.*\]', raw, re.DOTALL)
+
+    match = re.search(r"\[.*\]", raw, re.DOTALL)
     if not match:
         # Fallback: treat all as passed if we can't parse (log warning)
         return {c["id"]: (True, f"parse-failed: {raw[:80]}") for c in cases}
@@ -227,8 +230,7 @@ class TestOracleParser:
             if "amount" in expected and expected["amount"] is not None:
                 assert result.amount is not None, f"Case {case_id}: Expected amount but got None"
                 assert compare_decimal(result.amount, expected["amount"]), (
-                    f"Case {case_id}: Expected amount {expected['amount']}, "
-                    f"got {result.amount}"
+                    f"Case {case_id}: Expected amount {expected['amount']}, got {result.amount}"
                 )
 
             # Check currency
@@ -268,8 +270,7 @@ class TestOracleParser:
                 expected_parts = normalize_participants(expected["participants"])
                 actual_parts = normalize_participants(result.split_among)
                 assert actual_parts == expected_parts, (
-                    f"Case {case_id}: Expected participants {expected_parts}, "
-                    f"got {actual_parts}"
+                    f"Case {case_id}: Expected participants {expected_parts}, got {actual_parts}"
                 )
 
             # Check custom_splits
@@ -363,7 +364,11 @@ class TestOracleConfirmation:
 
     @pytest.mark.parametrize(
         "case_id",
-        [c["id"] for c in ORACLE_CASES if c["should_parse"] and "expected_confirmation_contains" in c],
+        [
+            c["id"]
+            for c in ORACLE_CASES
+            if c["should_parse"] and "expected_confirmation_contains" in c
+        ],
     )
     def test_confirmation_contains(self, case_id: str) -> None:
         """Test that confirmation messages contain expected phrases."""
@@ -437,9 +442,7 @@ class TestOracleBalances:
                 )
             else:  # EQUAL
                 participants = result.split_among or [result.paid_by]
-                splits = ledger.compute_equal_splits(
-                    result.amount, result.currency, participants
-                )
+                splits = ledger.compute_equal_splits(result.amount, result.currency, participants)
 
             new_trip, _ = ledger.add_expense(
                 trip,
@@ -498,18 +501,26 @@ for _c in ORACLE_CASES:
         _r = parse_command(_c["input"])
         if isinstance(_r, ParsedCommand):
             _conf = format_confirmation(_r, _HAIKU_TRIP)
-            _HAIKU_CASES.append({
-                "id": _c["id"], "input": _c["input"], "confirmation": _conf,
-                "trip_participants": _HAIKU_TRIP.participants,
-            })
+            _HAIKU_CASES.append(
+                {
+                    "id": _c["id"],
+                    "input": _c["input"],
+                    "confirmation": _conf,
+                    "trip_participants": _HAIKU_TRIP.participants,
+                }
+            )
     elif _c.get("intent") == "add_expense_no_trip":
         _r = parse_command(_c["input"])
         if isinstance(_r, ParsedCommand):
             _conf = format_confirmation(_r, None)
-            _HAIKU_CASES.append({
-                "id": _c["id"], "input": _c["input"], "confirmation": _conf,
-                "trip_participants": None,  # no group context — Haiku judges cold
-            })
+            _HAIKU_CASES.append(
+                {
+                    "id": _c["id"],
+                    "input": _c["input"],
+                    "confirmation": _conf,
+                    "trip_participants": None,  # no group context — Haiku judges cold
+                }
+            )
 
 # Run batch validation once at module level (cached); keyed by case_id
 _HAIKU_RESULTS: dict[str, tuple[bool, str]] = {}
@@ -576,8 +587,7 @@ class TestOracleConfirmationFormat:
 
     @pytest.mark.parametrize(
         "case_id",
-        [c["id"] for c in ORACLE_CASES
-         if c["should_parse"] and c.get("expected_confirmation")],
+        [c["id"] for c in ORACLE_CASES if c["should_parse"] and c.get("expected_confirmation")],
     )
     def test_confirmation_matches_gt(self, case_id: str, request: pytest.FixtureRequest) -> None:
         """Actual confirmation must exactly match the GT string.
@@ -639,7 +649,7 @@ class TestOracleSummary:
             by_intent[intent] = by_intent.get(intent, 0) + 1
 
         print("\n📊 Oracle Test Suite Statistics")
-        print(f"{'='*40}")
+        print(f"{'=' * 40}")
         print(f"Total cases: {total}")
         print(f"Should parse: {should_parse}")
         print(f"Should fail: {should_fail}")
@@ -668,7 +678,7 @@ class TestOracleSummary:
                     parse_failures += 1
 
         print("\n📈 Validation Results:")
-        print(f"  Correct: {parse_successes}/{total} ({100*parse_successes/total:.1f}%)")
+        print(f"  Correct: {parse_successes}/{total} ({100 * parse_successes / total:.1f}%)")
         print(f"  Incorrect: {parse_failures}/{total}")
 
         # Assert quality bar

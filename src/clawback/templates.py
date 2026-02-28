@@ -147,13 +147,9 @@ ERROR_SHEETS = (
 
 FALLBACK_TEMPLATES: dict[str, str] = {
     "missing_amount": (
-        "❓ I didn't catch the amount. Try:\n"
-        "*kai add dinner ₪150 paid by dan split equally*"
+        "❓ I didn't catch the amount. Try:\n*kai add dinner ₪150 paid by dan split equally*"
     ),
-    "missing_paid_by": (
-        "❓ Who paid? Try:\n"
-        "*kai add dinner ₪150 paid by yonatan split equally*"
-    ),
+    "missing_paid_by": ("❓ Who paid? Try:\n*kai add dinner ₪150 paid by yonatan split equally*"),
     "missing_participants": (
         "❓ Who's splitting? Try:\n"
         "*kai add dinner ₪150 paid by yonatan split equally between yonatan/dan/sara*"

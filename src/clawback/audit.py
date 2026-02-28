@@ -61,7 +61,7 @@ def log_input(
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def read_log(log_path: Path | None = None, limit: int | None = None) -> list[dict]:
+def read_log(log_path: Path | None = None, limit: int | None = None) -> list[dict[str, object]]:
     """
     Read entries from the log file.
 

@@ -66,7 +66,7 @@ def format_confirmation(cmd: ParsedCommand, trip: Trip | None = None) -> str:
                 f"{person} {templates.format_currency(amount, cmd.currency)}"
                 for person, amount in cmd.custom_splits.items()
             )
-            custom_total = sum(cmd.custom_splits.values())
+            custom_total = sum(cmd.custom_splits.values(), Decimal(0))
             if custom_total != cmd.amount:
                 diff = cmd.amount - custom_total
                 diff_display = templates.format_currency(abs(diff), cmd.currency)

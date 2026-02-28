@@ -322,6 +322,7 @@ class TestCommandHandler:
 
         from clawback.commands import format_confirmation
         from clawback.models import CommandType, ParsedCommand, SplitType
+
         cmd = ParsedCommand(
             command_type=CommandType.ADD_EXPENSE,
             raw_text="kai add dinner ₪100 paid by dan",
@@ -342,6 +343,7 @@ class TestCommandHandler:
 
         from clawback.commands import format_confirmation
         from clawback.models import CommandType, ParsedCommand, SplitType, Trip
+
         cmd = ParsedCommand(
             command_type=CommandType.ADD_EXPENSE,
             raw_text="kai add lunch ₪50 paid by sara",
@@ -362,6 +364,7 @@ class TestCommandHandler:
 
         from clawback.commands import format_confirmation
         from clawback.models import CommandType, ParsedCommand, SplitType, Trip
+
         cmd = ParsedCommand(
             command_type=CommandType.ADD_EXPENSE,
             raw_text="kai add drinks ₪90 paid by avi",

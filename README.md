@@ -20,6 +20,21 @@ Just say what happened — in English or Hebrew — and ClawBack handles the res
 
 ---
 
+## 📋 Contents
+
+- [Why ClawBack?](#the-problem-with-expense-apps)
+- [What Makes It Different](#-what-makes-it-different)
+- [Features](#-features)
+- [How It Works](#-how-it-works-architecture)
+- [Installation](#-installation)
+- [Usage Examples](#-usage-examples)
+- [LLM Financial Audit](#-optional-intelligence-llm-confirmation-audit)
+- [Testing](#-testing)
+- [OpenClaw Skill](#-openclaw-skill)
+- [Project Structure](#%EF%B8%8F-project-structure)
+
+---
+
 ## The problem with expense apps
 
 Every expense app makes you fill in fields.  

@@ -217,6 +217,59 @@ clawback handle $CHAT_ID "undo"
 
 ---
 
+## 🧠 Optional Intelligence: LLM Confirmation Audit
+
+ClawBack is **zero-LLM by design** for all production operations — parsing, splitting, and balance reads are pure regex + arithmetic. No API calls. No cost. No latency.
+
+But money is sensitive. When you want an independent check that confirmation messages are financially accurate, ClawBack has an optional LLM audit layer:
+
+```
+User input (natural language)
+        │
+        ▼
+   Regex Parser      ← always runs, zero cost
+        │
+        ▼
+  Confirmation       ← template-rendered, zero cost
+  message
+        │
+        ▼ (optional, manual trigger only)
+   LLM Audit         ← verifies amounts, payer, per-person splits are correct
+```
+
+### How it works
+
+The auditor batches **multiple confirmation messages into a single LLM call** — not one call per expense. For 130 oracle test cases, this produces ~11 batched calls total (~$0.01, ~100 seconds).
+
+The LLM is asked to verify:
+- Amount and currency match the original input
+- Payer is correct
+- Per-person split amounts are arithmetically correct (the model checks the maths)
+- Clarifying questions are appropriate when participants were unspecified
+
+This runs **after** parsing — the LLM never sees raw user input, only the already-rendered confirmation. It's a financial proofreader, not a parser.
+
+### When to run it
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Normal day-to-day use | ✅ No audit needed — parser + Decimal arithmetic is correct |
+| After changing parser logic | ✅ Run oracle audit to verify edge cases |
+| Suspicious confirmation message | ✅ Run single audit manually |
+| CI on every push | ❌ Never — adds cost and latency with no benefit |
+
+### Running the audit
+
+```bash
+# Requires ANTHROPIC_API_KEY
+pytest -m oracle --haiku
+
+# Or trigger manually in GitHub Actions:
+# Actions → "Oracle Validation" → Run workflow
+```
+
+---
+
 ## 🧪 Testing
 
 ```bash
@@ -238,7 +291,7 @@ pytest -m oracle --haiku
 ```
 
 > **CI runs the full 517-test suite with no external API calls.**  
-> The `--haiku` LLM validation is optional and never runs in CI — trigger it manually from Actions → "Oracle Validation" if you want to verify confirmation message quality.
+> The `--haiku` LLM financial audit is optional and never runs in CI. It batches all oracle cases into ~11 LLM calls (~$0.01 total) to verify that confirmation messages are arithmetically accurate. Trigger it manually from Actions → "Oracle Validation" after parser changes, or run locally with `ANTHROPIC_API_KEY` set.
 
 ---
 

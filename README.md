@@ -1,307 +1,284 @@
-# Clawback 🧾
+<div align="center">
 
-[![CI](https://github.com/yhyatt/clawback/actions/workflows/ci.yml/badge.svg)](https://github.com/yhyatt/clawback/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://github.com/yhyatt/clawback/actions)
-[![PyPI](https://img.shields.io/pypi/v/clawback)](https://pypi.org/project/clawback/)
-[![Python](https://img.shields.io/pypi/pyversions/clawback)](https://pypi.org/project/clawback/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<img src="deploy/openclaw-skill/assets/banner.jpg" alt="ClawBack — Group Expense Splitting" width="100%">
+
+# ClawBack 🧾
 
 **Group expense splitting that understands how you actually talk.**
 
-No forms. No dropdowns. Just say what happened.
+[![CI](https://github.com/yhyatt/clawback/actions/workflows/ci.yml/badge.svg)](https://github.com/yhyatt/clawback/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)](https://github.com/yhyatt/clawback/actions)
+[![Python](https://img.shields.io/pypi/pyversions/clawback)](https://pypi.org/project/clawback/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blue)](https://clawhub.com/skills/clawback-expense)
+
+No forms. No dropdowns. No app to install.  
+Just say what happened — in English or Hebrew — and ClawBack handles the rest.
+
+</div>
 
 ---
 
-## Why Clawback?
+## The problem with expense apps
 
-Every expense app makes you fill in fields. Clawback lets you describe what happened, like you'd tell a friend:
+Every expense app makes you fill in fields.  
+Tap payer. Type amount. Select currency. Choose split method. Add participants one by one.
+
+Nobody talks like that. And when you're at a restaurant with friends, nobody wants to.
+
+---
+
+## ClawBack is different
 
 ```
 Dan paid ₪340 for dinner, split equally between Dan, Yonatan, Louise, and Zoe
 ```
 
-Or in Hebrew:
-
 ```
 דן שילם 340 שקל על ארוחת ערב, מחולק שווה בין דן, יונתן, לואיז וזואי
 ```
 
-Both work. You get the same result. No app required — just a WhatsApp group and a shared Google Sheet.
+Both inputs. Same result. Instantly.
+
+No app. No signup. Just a WhatsApp or Telegram message and a shared Google Sheet everyone can see.
 
 ---
 
-## What Makes It Different
+## ✨ What Makes It Different
 
-| Feature | Clawback | Splitwise | Tricount |
-|---|---|---|---|
-| Natural language input | ✅ | ❌ | ❌ |
-| Hebrew / multilingual | ✅ | ❌ | ❌ |
-| WhatsApp-native | ✅ | ❌ | ❌ |
-| Google Sheets backend | ✅ | ❌ | ❌ |
-| Zero-LLM reads | ✅ | — | — |
-| Open source | ✅ | ❌ | ❌ |
-| API-free for reads | ✅ | ❌ | ❌ |
+<table>
+<tr>
+<th>Feature</th>
+<th>ClawBack</th>
+<th>Splitwise</th>
+<th>Tricount</th>
+</tr>
+<tr>
+<td>🗣️ Natural language input</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>🌍 Hebrew / multilingual</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>💬 WhatsApp & Telegram native</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>📊 Google Sheets backend</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>⚡ Zero-LLM reads (instant, free)</td>
+<td>✅</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>💱 Multi-currency with live FX</td>
+<td>✅</td>
+<td>Paid</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>🔓 Open source</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</table>
 
 ---
 
-## Features
+## 🚀 Features
 
-- **🗣️ Natural language** — parse expenses as you'd say them in English or Hebrew
-- **💱 Multi-currency** — ILS (`₪`), USD (`$`), EUR (`€`), GBP (`£`), JPY (`¥`); live FX via [frankfurter.app](https://www.frankfurter.app) (free, no key)
-- **🌍 Multilingual** — Hebrew and English input, Hebrew payer names, space-separated thousands (`1 200`)
-- **⚖️ Flexible splits** — equal split, split among specific people, or custom amounts per person
-- **📊 Google Sheets backend** — shared live view for all trip members; no app install needed
-- **⚡ Zero-LLM reads** — balances, summaries, and participant lists are instant and free (no API call)
-- **✅ Confirmation workflow** — write operations show a preview before committing; cancel anytime
-- **🔢 Decimal arithmetic** — all financial math uses Python `Decimal`, never floats
-- **🏦 Audit log** — append-only ledger; full history always preserved
-- **517 tests** — unit tests + 130 oracle edge cases (Hebrew names, SQL injection inputs, duplicate deduplication, space-separated amounts, and more)
+### 🗣️ Natural Language Parsing
+Describe expenses the way you'd tell a friend. ClawBack parses free-text in English and Hebrew using a regex-based parser — **no LLM, no API call, no cost** on writes.
 
----
-
-## Quick Examples
-
-### English
-
-```bash
-# Create a trip
-clawback handle mytrip "kai trip Greece Vacation base EUR"
-# → Confirm? yes
-
-# Add an expense — equal split among all
-clawback handle mytrip "kai add dinner €120 paid by Dan"
-
-# Add an expense — specific people only
-clawback handle mytrip "kai add wine €60 paid by Avi only Dan, Sara"
-
-# Custom split amounts
-clawback handle mytrip "kai add hotel ₪1200 paid by Yonatan custom Dan:400, Sara:400, Yonatan:400"
-
-# Record a settlement
-clawback handle mytrip "kai settle Sara paid Dan €40"
-
-# Check balances (zero LLM calls)
-clawback handle mytrip "kai balances"
-clawback handle mytrip "kai balances in USD"
-
-# Full summary
-clawback handle mytrip "kai summary"
+```
+"Alice paid $200 for the hotel, split between Alice and Bob"
+"עמית שילם 1 200 שקל על המלון, מחולק בין עמית לרון"
 ```
 
-### Hebrew
+### 💱 Multi-Currency with Live FX
+Support for ILS (₪), USD ($), EUR (€), GBP (£), JPY (¥) and more.  
+Live exchange rates via [frankfurter.app](https://www.frankfurter.app) — **free, no API key needed**.
 
-```bash
-clawback handle mytrip "קאי הוסף ארוחת ערב ₪340 שולם על ידי דן"
-clawback handle mytrip "קאי יתרות"
+```
+"Sara paid €85 for wine" → converted to trip base currency automatically
 ```
 
-Hebrew payer names and Hebrew numerals are supported. The parser handles both scripts in the same message.
+### ⚖️ Flexible Splits
+Equal split, split among specific people, or custom amounts per person.
+
+```
+"Dan paid ₪500. Yonatan owes 200, Sara owes 150, Dan keeps the rest"
+```
+
+### ⚡ Zero-LLM Reads
+Balance checks, summaries, and participant lists are **instant and free**.  
+No API call. No latency. No cost. Reads are pure local computation.
+
+### ✅ Confirmation Workflow
+Writes show a structured preview before committing. User confirms with "yes" or cancels with "no". Pending confirmations expire after 5 minutes.
+
+```
+📋 Confirm expense
+  Payer: Dan  Amount: ₪340.00
+  Split: Yonatan ₪113.33 · Louise ₪113.33 · Zoe ₪113.34
+  Reply yes to confirm, no to cancel.
+```
+
+### 📊 Google Sheets Backend
+Every trip has a shared Google Sheet. All participants can see live balances without installing anything.
+
+### 🔢 Decimal-Safe Arithmetic
+All financial math uses Python `Decimal` — never floats. No rounding surprises.
+
+### 📋 Audit Log
+Append-only ledger. Full history always preserved. Undo always available.
 
 ---
 
-## Token Economy
+## 🔥 How It Works (Architecture)
 
-Clawback is designed to cost almost nothing to run.
+```
+User message (natural language)
+        │
+        ▼
+   Regex Parser           ← no LLM, no cost
+        │
+        ▼
+  Command Handler
+   ├── Reads ──────────── instant local compute, zero API calls
+   └── Writes ─────────── confirmation preview → user says yes → ledger update → Sheets sync
+```
 
-| Operation | LLM calls | Cost |
-|---|---|---|
-| `kai balances` | 0 | Free |
-| `kai summary` | 0 | Free |
-| `kai who` | 0 | Free |
-| `kai add ...` (write) | 0 (parser is regex) | Free |
-| Confirmation step | 0 (template render) | Free |
-| **Oracle test suite** | ~11 batch calls (Haiku) | ~$0.01 total |
-
-**Reads are completely free.** No API call, no latency.
-
-**Writes** use a regex parser — also no LLM. The confirmation message is template-rendered. The only time an LLM is optionally involved is the `--haiku` oracle validation test, which runs 130 edge cases in ~11 batched Haiku calls (~100s, ~$0.01).
-
-This makes Clawback safe to run in a busy WhatsApp group all day without burning your API budget.
+**Writes** use the regex parser — no LLM involved at any step. The confirmation message is template-rendered. The parser handles Hebrew names, space-separated thousands (`1 200`), and mixed-currency inputs natively.
 
 ---
 
-## Installation
+## 📦 Installation
 
 ```bash
 pip install clawback
 ```
 
-### Optional: Google Sheets integration
-
-Clawback uses the [`gog` CLI](https://github.com/yhyatt/gog) for Sheets:
+Or install the [OpenClaw skill](https://clawhub.com/skills/clawback-expense) and let your AI assistant handle it:
 
 ```bash
-npm install -g gog
-gog auth login
-export GOG_KEYRING_PASSWORD=your-keyring-password
+clawhub install clawback-expense
 ```
 
-Without `gog`, Clawback works in local-only mode (state stored in `~/.clawback/`).
-
----
-
-## CLI Reference
+### First-time setup
 
 ```bash
-# Parse a message (debug/dry-run)
-clawback parse "kai add dinner ₪100 paid by Dan"
+# Initialize a trip
+clawback handle $CHAT_ID "kai trip Greece Vacation base EUR"
 
-# Handle a message for a chat session
-clawback handle <chat_id> "<message>"
-
-# List all trips
-clawback trips
-
-# Show balances for a trip
-clawback balances "<trip name>"
-```
-
-### Command Syntax
-
-| Command | Example |
-|---|---|
-| `kai add <desc> <amount> paid by <name>` | `kai add dinner ₪340 paid by Dan` |
-| `kai add ... only <names>` | `kai add wine €60 paid by Avi only Dan, Sara` |
-| `kai add ... custom <name>:<amt>, ...` | `kai add hotel ₪900 paid by Dan custom Dan:300, Sara:600` |
-| `kai settle <from> paid <to> <amount>` | `kai settle Sara paid Dan €40` |
-| `kai balances [in <currency>]` | `kai balances in USD` |
-| `kai summary` | `kai summary` |
-| `kai who` | `kai who` |
-| `kai undo` | `kai undo` |
-| `kai trip <name> [base <currency>]` | `kai trip Greece base EUR` |
-| `kai help` | `kai help` |
-
----
-
-## Confirmation Flow
-
-Write commands show a preview before committing:
-
-```
-User:  kai add dinner ₪340 paid by Yonatan
-Bot:   💬 Got it: *dinner* ₪340 paid by Yonatan, split equally →
-       Dan ₪85 · Sara ₪85 · Louise ₪85 · Yonatan ₪85
-       Add this? (yes/no)
-User:  yes
-Bot:   ✅ *dinner* ₪340 (paid by Yonatan)
-       Dan ₪85 · Sara ₪85 · Louise ₪85 · Yonatan ₪85
-
-       📊 Running debts:
-       • Dan → Yonatan: ₪85
-       • Sara → Yonatan: ₪85
-       • Louise → Yonatan: ₪85
-```
-
-Pending confirmations expire after 5 minutes. Say `no` to cancel.
-
----
-
-## OpenClaw Integration
-
-Clawback is built to run as a native [OpenClaw](https://openclaw.dev) skill. Kai (OpenClaw's AI assistant) can parse expense messages directly from WhatsApp or Telegram groups and update the shared ledger — no manual CLI needed.
-
-```
-[WhatsApp group]
-Yonatan: Dan paid ₪340 for dinner split equally
-Kai: 💬 Got it: dinner ₪340 paid by Dan, split equally → ...
-Yonatan: yes
-Kai: ✅ Added. Running debts: Sara → Dan: ₪85 ...
-```
-
-See [`deploy/openclaw-skill/`](deploy/openclaw-skill/) for the skill definition.
-
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────┐
-│           WhatsApp / Telegram / CLI              │
-└─────────────────┬────────────────────────────────┘
-                  │ text
-                  ▼
-┌──────────────────────────────────────────────────┐
-│          Parser  (regex, zero LLM)               │
-│          Handles EN + Hebrew, multi-currency     │
-└─────────────────┬────────────────────────────────┘
-                  │ ParsedCommand
-                  ▼
-┌──────────────────────────────────────────────────┐
-│              CommandHandler                      │
-│  reads  → execute immediately (zero LLM)        │
-│  writes → preview → confirm → execute            │
-└──────────┬─────────────────┬────────────────────┘
-           ▼                 ▼
-   ┌──────────────┐  ┌──────────────────┐
-   │    Ledger    │  │  Google Sheets   │
-   │  (pure math) │  │  (gog CLI sync)  │
-   └──────────────┘  └──────────────────┘
+# Add participants
+clawback handle $CHAT_ID "kai add participants Dan, Sara, Yonatan, Louise"
 ```
 
 ---
 
-## Google Sheets Structure
-
-Each trip creates a spreadsheet with 5 tabs:
-
-| Tab | Type | Contents |
-|---|---|---|
-| **Expenses** | append-only | expense_id, timestamp, description, amount, currency, paid_by |
-| **Splits** | append-only | expense_id, person, amount_owed, currency |
-| **Settlements** | append-only | settlement_id, timestamp, from, to, amount, currency |
-| **Balances** | rewritten | person, net_balance, currency |
-| **Summary** | rewritten | from, to, amount, currency |
-
----
-
-## Development
+## 💬 Usage Examples
 
 ```bash
-git clone https://github.com/yhyatt/clawback
-cd clawback
+# Add an expense
+clawback handle $CHAT_ID "Dan paid ₪340 for dinner, split equally"
+
+# Custom split
+clawback handle $CHAT_ID "Sara paid €200. Dan owes 80, Yonatan owes 70, Sara keeps the rest"
+
+# Check balances (free, instant — no LLM)
+clawback handle $CHAT_ID "balances"
+clawback handle $CHAT_ID "balances in USD"
+
+# Settle a debt
+clawback handle $CHAT_ID "Yonatan paid Dan ₪120"
+
+# Full trip summary
+clawback handle $CHAT_ID "summary"
+
+# Undo last action
+clawback handle $CHAT_ID "undo"
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Install dev dependencies
 pip install -e ".[dev]"
 
-# Lint + type check
-ruff check src tests
-mypy src
-
-# Run tests (default CI — no oracle, no Haiku)
+# Run the full test suite (517 tests, no API calls, no LLM)
 pytest
 
 # Run with coverage
-pytest --cov=clawback --cov-report=term --cov-fail-under=90
-```
+pytest --cov=clawback --cov-report=term
 
-### Oracle Test Suite
+# Run oracle edge-case suite (130 edge cases — Hebrew names, decimal math, duplicates, etc.)
+pytest -m oracle
 
-The oracle suite validates 130 edge cases against ground-truth strings. It is **not** part of default CI (expensive and slow).
-
-**Trigger via GitHub Actions:**
-→ Actions → "Oracle Validation" → Run workflow → optionally enable `haiku_validation`
-
-**Run manually:**
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+# Run oracle + LLM validation of confirmation message quality
+# Requires ANTHROPIC_API_KEY. Runs ~11 batched calls (~100s, ~$0.01 total).
 pytest -m oracle --haiku
 ```
 
-This runs ~11 batched Haiku calls (~100s, ~$0.01) rather than one call per case.
+> **CI runs the full 517-test suite with no external API calls.**  
+> The `--haiku` LLM validation is optional and never runs in CI — trigger it manually from Actions → "Oracle Validation" if you want to verify confirmation message quality.
 
 ---
 
-## State
+## 🤖 OpenClaw Skill
 
-Local state is stored in `~/.clawback/`:
+ClawBack ships as an [OpenClaw](https://openclaw.ai) skill. Install it and your AI assistant can parse expenses from WhatsApp or Telegram automatically — no manual `clawback handle` commands needed.
+
+```bash
+clawhub install clawback-expense
+```
+
+Once installed, just talk naturally in your group:
+
+> *"Dan paid ₪340 for dinner, split equally"*
+
+Your assistant parses it, shows a confirmation, and logs it to the shared Sheet on approval.
+
+---
+
+## 🗂️ Project Structure
 
 ```
-~/.clawback/
-  trips.json     # All trip data (expenses, settlements, participants)
-  pending.json   # Pending confirmations (5-minute TTL)
-  active.json    # Chat ID → active trip mapping
+clawback/
+├── src/clawback/
+│   ├── parser.py       # Natural language → structured command (regex, no LLM)
+│   ├── commands.py     # Command execution + confirmation workflow
+│   ├── ledger.py       # Append-only ledger + balance computation
+│   ├── sheets.py       # Google Sheets sync
+│   ├── fx.py           # Live FX rates (frankfurter.app)
+│   ├── templates.py    # Confirmation message templates
+│   ├── models.py       # Pydantic data models
+│   ├── state.py        # Trip state persistence
+│   └── cli.py          # CLI entrypoint
+├── tests/              # 517 tests (unit + oracle edge cases)
+├── deploy/
+│   └── openclaw-skill/ # OpenClaw skill package
+└── pyproject.toml
 ```
 
 ---
 
-## License
+## 📄 License
 
-MIT © [yhyatt](https://github.com/yhyatt)
+MIT © [Yonatan Hyatt](https://github.com/yhyatt)
